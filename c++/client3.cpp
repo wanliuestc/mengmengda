@@ -7,7 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <iostream>
-#include <fstream>
+#include <stdio.h>
 
 using namespace std;
 
@@ -35,7 +35,7 @@ public:
 
 int main(void)
 {
-     ifstream in;
+     FILE *fp;
      int sockfd;
      int tempfd;
      struct sockaddr_in s_addr_in;
@@ -62,35 +62,32 @@ int main(void)
 	  cout << "Connect error" << endl;
 	  return -1;
      }
-     in.open("222", fstream::in | fstream::binary);
-     if(in.rdstate() == fstream::failbit)
+     fp = fopen("666", "wb");
+     if(!fp)
      {
-	  cout << "file opened failed" << endl;
+	  printf("open file error");
 	  return -1;
      }
-
-     in.seekg(0, fstream::end);
-     long size = in.tellg();
-     in.seekg(0, fstream::beg);
-
      int id = 0;
      int len = 0;
-     while(in)
+     int received = 0;
+     MESSAGE mg;
+     while(1)
      {
-	  in.read((char *)data_send, 1024);
-	  len = in.gcount();
-	  MESSAGE m;
-	  m.s_addr = inet_addr("172.20.156.181");
-	  m.m.id = id;
-	  m.m.len = len;
-	  memcpy(m.m.buf, data_send, len);
-	  m.size = size;
-	  write(sockfd, &m, sizeof(MESSAGE));
-	  memset(data_send, 0, 1024);
-	  ++id;
+	  memset(&mg, 0, sizeof(MESSAGE));
+	  received = read(sockfd, &mg, sizeof(MESSAGE));
+	  if(received <= 0)
+	       break;
+	  while(received < 1048)
+	  {
+	       int temp = read(fd, (char *)&msg + i_recevBytes, sizeof(MESSAGE) - i_recevBytes);
+	       i_recevBytes += temp;
+	  }
+	  fseek(fp, 1024*msg.m.id, SEEK_SET);
+	  fwrite(msg.m.buf, 1, msg.m.len, fp);
      }
-     in.close();
-     while(1);
+     fclose(fp);
+     while(1)
      int ret = shutdown(sockfd, SHUT_WR);
      assert(ret != -1);
      return 0;

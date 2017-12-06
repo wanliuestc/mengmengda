@@ -10,9 +10,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <map>
-#include <fstream>
+#include <stdio.h>
 
 using namespace std;
+
 class test
 {
 public:
@@ -100,8 +101,12 @@ static void* Data_handle(void *sock_fd)
      int i_recevBytes;
      MESSAGE msg;
      const char * data_send = "Server has received your request!\n";
-     ofstream os;
-     os.open("file", fstream::out | fstream::binary);
+     //FILE *fp = fopen("file", "wb");
+     /*if(!fp)
+     {
+	  printf("open file error");
+	  pthread_exit(NULL);
+	  }*/
      while(1)
      {
 	  memset(&msg, 0, sizeof(MESSAGE));
@@ -113,11 +118,13 @@ static void* Data_handle(void *sock_fd)
 	       int temp = read(fd, (char *)&msg + i_recevBytes, sizeof(MESSAGE) - i_recevBytes);
 	       i_recevBytes += temp;
 	  }
-	  os.seekp(1024*msg.m.id, ofstream::beg);
-	  os.write((char *)&msg, msg.m.len);
+	  //fseek(fp, 1024*msg.m.id, SEEK_SET);
+	  //fwrite(msg.m.buf, 1, msg.m.len, fp);
 	  cout << msg.m.id << "  " << msg.m.len << endl;
+	  int remotesock = socketMap[msg.s_addr];
+	  write(remotesock, &msg, sizeof(MESSAGE));
      }
-     os.close();
+     //fclose(fp);
      cout << "terminating current client connection..." << endl;
      close(fd);
      pthread_exit(NULL);

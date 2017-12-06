@@ -7,7 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <iostream>
-#include <fstream>
+#include <stdio.h>
 
 using namespace std;
 
@@ -35,7 +35,7 @@ public:
 
 int main(void)
 {
-     ifstream in;
+     FILE *fp;
      int sockfd;
      int tempfd;
      struct sockaddr_in s_addr_in;
@@ -62,34 +62,26 @@ int main(void)
 	  cout << "Connect error" << endl;
 	  return -1;
      }
-     in.open("222", fstream::in | fstream::binary);
-     if(in.rdstate() == fstream::failbit)
+     fp = fopen("222", "rb");
+     if(!fp)
      {
-	  cout << "file opened failed" << endl;
+	  printf("open file error");
 	  return -1;
      }
-
-     in.seekg(0, fstream::end);
-     long size = in.tellg();
-     in.seekg(0, fstream::beg);
-
      int id = 0;
      int len = 0;
-     while(in)
+     while(len = fread(data_send, 1, 1024, fp))
      {
-	  in.read((char *)data_send, 1024);
-	  len = in.gcount();
 	  MESSAGE m;
 	  m.s_addr = inet_addr("172.20.156.181");
 	  m.m.id = id;
 	  m.m.len = len;
 	  memcpy(m.m.buf, data_send, len);
-	  m.size = size;
 	  write(sockfd, &m, sizeof(MESSAGE));
 	  memset(data_send, 0, 1024);
 	  ++id;
      }
-     in.close();
+     fclose(fp);
      while(1);
      int ret = shutdown(sockfd, SHUT_WR);
      assert(ret != -1);
